@@ -411,6 +411,34 @@ namespace KERBALISM
 
 		// --- SCIENCE --------------------------------------------------------------
 
+		public static ExperimentStateChanged onExperimentStateChanged = new ExperimentStateChanged();
+
+		public class ExperimentStateChanged
+		{
+			// This is the list of methods that should be activated when the event fires
+			internal List<Action<Guid, string, bool>> receivers = new List<Action<Guid, string, bool>>();
+
+			// This adds a connection info handler
+			public void Add(Action<Guid, string, bool> receiver)
+			{
+				if (!receivers.Contains(receiver)) receivers.Add(receiver);
+			}
+
+			// This removes a connection info handler
+			public void Remove(Action<Guid, string, bool> receiver)
+			{
+				if (receivers.Contains(receiver)) receivers.Remove(receiver);
+			}
+
+			public void Notify(Guid vessel_id, string experiment_id, bool state)
+			{
+				foreach (Action<Guid, string, bool> receiver in receivers)
+				{
+					receiver.Invoke(vessel_id, experiment_id, state);
+				}
+			}
+		}
+
 		// return size of a file in a vessel drive
 		public static double FileSize(Vessel v, string subject_id)
 		{

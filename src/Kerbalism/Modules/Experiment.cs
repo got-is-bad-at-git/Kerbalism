@@ -65,7 +65,7 @@ namespace KERBALISM
 
 		public enum State
 		{
-			STOPPED = 0, WAITING, RUNNING, ISSUE
+			STOPPED = 0, WAITING, RUNNING, ISSUE, UNKNOWN
 		}
 
 		public static State GetState(Guid vessel_id, string experiment_id, double scienceValue, string issue, bool recording, bool forcedRun)
