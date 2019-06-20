@@ -321,7 +321,7 @@ namespace KERBALISM
 
 							case "Experiment":
 								experiments.Add(new KeyValuePair<Experiment, ProtoPartModuleSnapshot>(module_prefab as Experiment, m));
-								dev = new ProtoExperimentDevice(m, module_prefab as Experiment, p.flightID, v.vesselName, experiments);
+								dev = new ProtoExperimentDevice(v.protoVessel, m, module_prefab as Experiment, p.flightID, v.vesselName, experiments);
 								break;
 
 							case "ModuleDeployableSolarPanel":   dev = new ProtoPanelDevice(m, module_prefab as ModuleDeployableSolarPanel, p.flightID);          break;

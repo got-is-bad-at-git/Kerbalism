@@ -29,7 +29,8 @@ namespace KERBALISM
 
 		public override string Info()
 		{
-			var state = Experiment.GetState(experiment.scienceValue, experiment.issue, experiment.recording, experiment.forcedRun);
+
+			var state = Experiment.GetState(Lib.VesselID(experiment.part.vessel), experiment.experiment_id, experiment.scienceValue, experiment.issue, experiment.recording, experiment.forcedRun);
 			if (state == Experiment.State.WAITING) return "waiting...";
 			var exp = Science.Experiment(experiment.experiment_id);
 			var recordedPercent = Lib.HumanReadablePerc(experiment.dataSampled / exp.max_amount);
@@ -58,9 +59,10 @@ namespace KERBALISM
 
 	public sealed class ProtoExperimentDevice : Device
 	{
-		public ProtoExperimentDevice(ProtoPartModuleSnapshot proto, Experiment prefab, uint part_id, string vessel_name,
+		public ProtoExperimentDevice(ProtoVessel proto_vessel, ProtoPartModuleSnapshot proto, Experiment prefab, uint part_id, string vessel_name,
 		                             List<KeyValuePair<Experiment, ProtoPartModuleSnapshot>> allExperiments)
 		{
+			this.proto_vessel = proto_vessel;
 			this.proto = proto;
 			this.prefab = prefab;
 			this.part_id = part_id;
@@ -86,8 +88,7 @@ namespace KERBALISM
 			bool forcedRun = Lib.Proto.GetBool(proto, "forcedRun");
 			double scienceValue = Lib.Proto.GetDouble(proto, "scienceValue");
 			string issue = Lib.Proto.GetString(proto, "issue");
-
-			var state = Experiment.GetState(scienceValue, issue, recording, forcedRun);
+			var state = Experiment.GetState(Lib.VesselID(proto_vessel), prefab.experiment_id, scienceValue, issue, recording, forcedRun);
 			if (state == Experiment.State.WAITING) return "waiting...";
 
 			double dataSampled = Lib.Proto.GetDouble(proto, "dataSampled");
@@ -109,7 +110,7 @@ namespace KERBALISM
 			bool forcedRun = Lib.Proto.GetBool(proto, "forcedRun");
 			double scienceValue = Lib.Proto.GetDouble(proto, "scienceValue");
 			string issue = Lib.Proto.GetString(proto, "issue");
-			var state = Experiment.GetState(scienceValue, issue, recording, forcedRun);
+			var state = Experiment.GetState(Lib.VesselID(proto_vessel), prefab.experiment_id, scienceValue, issue, recording, forcedRun);
 
 
 			if(state == Experiment.State.WAITING)
@@ -144,6 +145,7 @@ namespace KERBALISM
 			Ctrl(!Lib.Proto.GetBool(proto, "recording"));
 		}
 
+		private readonly ProtoVessel proto_vessel;
 		private readonly ProtoPartModuleSnapshot proto;
 		private readonly Experiment prefab;
 		private readonly uint part_id;

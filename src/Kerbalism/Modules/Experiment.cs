@@ -68,16 +68,21 @@ namespace KERBALISM
 			STOPPED = 0, WAITING, RUNNING, ISSUE
 		}
 
-		public static State GetState(double scienceValue, string issue, bool recording, bool forcedRun)
+		public static State GetState(Guid vessel_id, string experiment_id, double scienceValue, string issue, bool recording, bool forcedRun)
 		{
 			bool hasValue = scienceValue >= 0.1;
 			bool smartScience = PreferencesScience.Instance.smartScience;
 
-			if (issue.Length > 0) return State.ISSUE;
-			if (!recording) return State.STOPPED;
-			if (!hasValue && forcedRun) return State.RUNNING;
-			if (!hasValue && smartScience) return State.WAITING;
-			return State.RUNNING;
+			State result = State.RUNNING;
+
+			if (issue.Length > 0) result = State.ISSUE;
+			else if (!recording) result = State.STOPPED;
+			else if (!hasValue && forcedRun) result = State.RUNNING;
+			else if (!hasValue && smartScience) result = State.WAITING;
+
+			ExperimentTracker.Update(vessel_id, experiment_id, result);
+
+			return result;
 		}
 
 		public override void OnLoad(ConfigNode node)
@@ -231,7 +236,7 @@ namespace KERBALISM
 				issue = TestForResources(vessel, resourceDefs, Kerbalism.elapsed_s, ResourceCache.Get(vessel));
 
 			scienceValue = Science.Value(last_subject_id, 0);
-			state = GetState(scienceValue, issue, recording, forcedRun);
+			state = GetState(Lib.VesselID(vessel), experiment_id, scienceValue, issue, recording, forcedRun);
 
 			if (!string.IsNullOrEmpty(issue))
 			{
@@ -404,7 +409,7 @@ namespace KERBALISM
 			double scienceValue = Science.Value(last_subject_id);
 			Lib.Proto.Set(m, "scienceValue", scienceValue);
 
-			var state = GetState(scienceValue, issue, recording, forcedRun);
+			var state = GetState(Lib.VesselID(v), experiment.experiment_id, scienceValue, issue, recording, forcedRun);
 			if (state != State.RUNNING)
 				return;
 			if (dataSampled >= Science.Experiment(subject_id).max_amount)
@@ -708,7 +713,7 @@ namespace KERBALISM
 		// action groups
 		[KSPAction("Start")] public void Start(KSPActionParam param)
 		{
-			switch (GetState(scienceValue, issue, recording, forcedRun)) {
+			switch (GetState(Lib.VesselID(vessel), experiment_id, scienceValue, issue, recording, forcedRun)) {
 				case State.STOPPED:
 				case State.WAITING:
 					Toggle();
