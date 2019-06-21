@@ -76,7 +76,8 @@ namespace KERBALISM
 			// radiation
 			bool new_inner, new_outer, new_magnetosphere;
 			radiation = Radiation.Compute(v, position, gamma_transparency, sunlight, out blackout, out new_magnetosphere, out new_inner, out new_outer, out interstellar);
-			if(new_inner!=inner_belt||new_outer!=outer_belt||new_magnetosphere!=magnetosphere)
+			// enforce API events on new instances
+			if(new_instance || new_inner != inner_belt || new_outer != outer_belt || new_magnetosphere != magnetosphere)
 			{
 				inner_belt = new_inner;
 				outer_belt = new_outer;
@@ -128,6 +129,7 @@ namespace KERBALISM
 			}
 
 			obsolete = false;
+			new_instance = false;
 		}
 
 		// at the two highest timewarp speed, the number of sun visibility samples drop to the point that
@@ -251,5 +253,6 @@ namespace KERBALISM
 		public double atmo_factor;
 
 		public bool obsolete = true;
+		public bool new_instance = true;
 	}
 }
