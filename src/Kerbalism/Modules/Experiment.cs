@@ -68,7 +68,7 @@ namespace KERBALISM
 			STOPPED = 0, WAITING, RUNNING, ISSUE, UNKNOWN
 		}
 
-		public static State GetState(Guid vessel_id, string experiment_id, double scienceValue, string issue, bool recording, bool forcedRun)
+		public static State GetState(Vessel v, string experiment_id, double scienceValue, string issue, bool recording, bool forcedRun)
 		{
 			bool hasValue = scienceValue >= 0.1;
 			bool smartScience = PreferencesScience.Instance.smartScience;
@@ -80,7 +80,7 @@ namespace KERBALISM
 			else if (!hasValue && forcedRun) result = State.RUNNING;
 			else if (!hasValue && smartScience) result = State.WAITING;
 
-			ExperimentTracker.Update(vessel_id, experiment_id, result);
+			ExperimentTracker.Update(v, experiment_id, result);
 
 			return result;
 		}
@@ -236,7 +236,7 @@ namespace KERBALISM
 				issue = TestForResources(vessel, resourceDefs, Kerbalism.elapsed_s, ResourceCache.Get(vessel));
 
 			scienceValue = Science.Value(last_subject_id, 0);
-			state = GetState(Lib.VesselID(vessel), experiment_id, scienceValue, issue, recording, forcedRun);
+			state = GetState(vessel, experiment_id, scienceValue, issue, recording, forcedRun);
 
 			if (!string.IsNullOrEmpty(issue))
 			{
@@ -409,7 +409,7 @@ namespace KERBALISM
 			double scienceValue = Science.Value(last_subject_id);
 			Lib.Proto.Set(m, "scienceValue", scienceValue);
 
-			var state = GetState(Lib.VesselID(v), experiment.experiment_id, scienceValue, issue, recording, forcedRun);
+			var state = GetState(v, experiment.experiment_id, scienceValue, issue, recording, forcedRun);
 			if (state != State.RUNNING)
 				return;
 			if (dataSampled >= Science.Experiment(subject_id).max_amount)
@@ -713,7 +713,7 @@ namespace KERBALISM
 		// action groups
 		[KSPAction("Start")] public void Start(KSPActionParam param)
 		{
-			switch (GetState(Lib.VesselID(vessel), experiment_id, scienceValue, issue, recording, forcedRun)) {
+			switch (GetState(vessel, experiment_id, scienceValue, issue, recording, forcedRun)) {
 				case State.STOPPED:
 				case State.WAITING:
 					Toggle();

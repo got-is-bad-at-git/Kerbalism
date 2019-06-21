@@ -30,7 +30,7 @@ namespace KERBALISM
 		public override string Info()
 		{
 
-			var state = Experiment.GetState(Lib.VesselID(experiment.part.vessel), experiment.experiment_id, experiment.scienceValue, experiment.issue, experiment.recording, experiment.forcedRun);
+			var state = Experiment.GetState(experiment.part.vessel, experiment.experiment_id, experiment.scienceValue, experiment.issue, experiment.recording, experiment.forcedRun);
 			if (state == Experiment.State.WAITING) return "waiting...";
 			var exp = Science.Experiment(experiment.experiment_id);
 			var recordedPercent = Lib.HumanReadablePerc(experiment.dataSampled / exp.max_amount);
@@ -88,7 +88,7 @@ namespace KERBALISM
 			bool forcedRun = Lib.Proto.GetBool(proto, "forcedRun");
 			double scienceValue = Lib.Proto.GetDouble(proto, "scienceValue");
 			string issue = Lib.Proto.GetString(proto, "issue");
-			var state = Experiment.GetState(Lib.VesselID(proto_vessel), prefab.experiment_id, scienceValue, issue, recording, forcedRun);
+			var state = Experiment.GetState(proto_vessel.vesselRef, prefab.experiment_id, scienceValue, issue, recording, forcedRun);
 			if (state == Experiment.State.WAITING) return "waiting...";
 
 			double dataSampled = Lib.Proto.GetDouble(proto, "dataSampled");
@@ -110,7 +110,7 @@ namespace KERBALISM
 			bool forcedRun = Lib.Proto.GetBool(proto, "forcedRun");
 			double scienceValue = Lib.Proto.GetDouble(proto, "scienceValue");
 			string issue = Lib.Proto.GetString(proto, "issue");
-			var state = Experiment.GetState(Lib.VesselID(proto_vessel), prefab.experiment_id, scienceValue, issue, recording, forcedRun);
+			var state = Experiment.GetState(proto_vessel.vesselRef, prefab.experiment_id, scienceValue, issue, recording, forcedRun);
 
 
 			if(state == Experiment.State.WAITING)

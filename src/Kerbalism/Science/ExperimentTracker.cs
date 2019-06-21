@@ -14,18 +14,18 @@ namespace KERBALISM
 	public static class ExperimentTracker
 	{
 		// this is called by the experiment part module and automation tab.
-		public static void Update(Guid vessel_id, string experiment_id, Experiment.State state)
+		public static void Update(Vessel v, string experiment_id, Experiment.State state)
 		{
 			bool isRunning = state == Experiment.State.RUNNING;
 
-			var experimentStateInfo = Info(vessel_id, experiment_id);
+			var experimentStateInfo = Info(Lib.VesselID(v), experiment_id);
 			bool wasRunning = experimentStateInfo.state == Experiment.State.RUNNING;
 
 			bool doNotify = isRunning != wasRunning || experimentStateInfo.state == Experiment.State.UNKNOWN;
 
 			experimentStateInfo.state = state;
 
-			if(doNotify) API.OnExperimentStateChanged.Notify(vessel_id, experiment_id, isRunning);
+			if(doNotify) API.OnExperimentStateChanged.Notify(v, experiment_id, isRunning);
 		}
 
 		public static ExperimentStateInfo Info(Guid vessel_id, string experiment_id)

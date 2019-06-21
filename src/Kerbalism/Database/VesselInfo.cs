@@ -81,7 +81,7 @@ namespace KERBALISM
 				inner_belt = new_inner;
 				outer_belt = new_outer;
 				magnetosphere = new_magnetosphere;
-				API.OnRadiationStateChanged.Notify(id, inner_belt, outer_belt, magnetosphere);
+				API.OnRadiationFieldChanged.Notify(v, inner_belt, outer_belt, magnetosphere);
 			}
 
 			Science.Generate_subject_id(null, null);
