@@ -141,16 +141,19 @@ namespace KERBALISM
 		}
 
 
-		public static VesselData Vessel(Vessel v)
+		public static VesselData Vessel(Guid vesselId)
 		{
-			Guid id = Lib.VesselID(v);
-			if (!vessels.ContainsKey(id))
+			if (!vessels.ContainsKey(vesselId))
 			{
-				vessels.Add(id, new VesselData());
+				vessels.Add(vesselId, new VesselData());
 			}
-			return vessels[id];
+			return vessels[vesselId];
 		}
 
+		public static VesselData Vessel(Vessel v)
+		{
+			return Vessel(Lib.VesselID(v));
+		}
 
 		public static Drive Drive(uint partId, string title = "Brick", double dataCapacity = -1, int sampleCapacity = -1)
 		{

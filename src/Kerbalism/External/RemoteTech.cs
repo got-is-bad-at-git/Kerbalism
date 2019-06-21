@@ -52,7 +52,7 @@ namespace KERBALISM
 			var handler = typeof(RemoteTech).GetMethod("RTCommInfoHandler");
 			API.Comm.Add(handler);
 
-			API.Failure.Add(RTFailureHandler);
+			API.OnFailure.Add(RTFailureHandler);
 		}
 
 		public static void RTCommInfoHandler(AntennaInfo antennaInfo, Vessel v)

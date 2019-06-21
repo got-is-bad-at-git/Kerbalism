@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace KERBALISM
 {
-
-
 	public class VesselData
 	{
 		public VesselData()
@@ -100,6 +98,24 @@ namespace KERBALISM
 			return supplies[name];
 		}
 
+		/// <summary>
+		/// Get vessel info. It will be updated if necessary.
+		/// </summary>
+		public Vessel_info UpdateInfo(Vessel v)
+		{
+			if (vessel_info == null) vessel_info = new Vessel_info(v);
+			if (vessel_info.obsolete) vessel_info.Update(v);
+			return vessel_info;
+		}
+
+		/// <summary>
+		/// Invalidate the vessel info. It will be updated the next time it is being accessed.
+		/// </summary>
+		public void InvalidateInfo()
+		{
+			if (vessel_info != null) vessel_info.obsolete = true;
+		}
+
 		public bool msg_signal;       // message flag: link status
 		public bool msg_belt;         // message flag: crossing radiation belt
 		public bool cfg_ec;           // enable/disable message: ec level
@@ -117,6 +133,9 @@ namespace KERBALISM
 		public Computer computer;     // store scripts
 		public Dictionary<string, SupplyData> supplies; // supplies data
 		public List<uint> scansat_id; // used to remember scansat sensors that were disabled
+
+		// non-persistent variables
+		private Vessel_info vessel_info = null;
 	}
 
 

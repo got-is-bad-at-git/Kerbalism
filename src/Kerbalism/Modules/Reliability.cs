@@ -515,7 +515,7 @@ namespace KERBALISM
 					break;
 			}
 
-			API.Failure.Notify(part, type, b);
+			API.OnFailure.Notify(part, type, b);
 		}
 
 

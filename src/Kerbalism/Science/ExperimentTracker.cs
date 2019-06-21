@@ -25,7 +25,7 @@ namespace KERBALISM
 
 			experimentStateInfo.state = state;
 
-			if(doNotify) API.onExperimentStateChanged.Notify(vessel_id, experiment_id, isRunning);
+			if(doNotify) API.OnExperimentStateChanged.Notify(vessel_id, experiment_id, isRunning);
 		}
 
 		public static ExperimentStateInfo Info(Guid vessel_id, string experiment_id)

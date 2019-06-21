@@ -349,6 +349,8 @@ namespace KERBALISM
 			vd.scansat_id.Clear();
 
 			Cache.PurgeObjects();
+
+			DB.Vessel(e.to.vessel).InvalidateInfo();
 		}
 
 		void PartDestroyed(Part p)

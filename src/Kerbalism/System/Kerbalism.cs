@@ -140,9 +140,6 @@ namespace KERBALISM
 				++warp_blending;
 			elapsed_s = fixedDeltaTime;
 
-			// evict oldest entry from vessel cache
-			Cache.Update();
-
 			// store info for oldest unloaded vessel
 			double last_time = 0.0;
 			Vessel last_v = null;
@@ -181,6 +178,7 @@ namespace KERBALISM
 
 				// get vessel data from db
 				VesselData vd = DB.Vessel(v);
+				vd.InvalidateInfo();
 
 				// get resource cache
 				Vessel_resources resources = ResourceCache.Get(v);

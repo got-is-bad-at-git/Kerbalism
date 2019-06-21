@@ -257,6 +257,27 @@ namespace KERBALISM
 			return rb.model.Has_field();
 		}
 
+		public static RadiationFieldChanged OnRadiationFieldChanged = new RadiationFieldChanged();
+		public class RadiationFieldChanged
+		{
+			internal List<Action<Guid, bool, bool, bool>> receivers = new List<Action<Guid, bool, bool, bool>>();
+			public void Add(Action<Guid, bool, bool, bool> receiver) { if (!receivers.Contains(receiver)) receivers.Add(receiver); }
+			public void Remove(Action<Guid, bool, bool, bool> receiver) { if (receivers.Contains(receiver)) receivers.Remove(receiver); }
+
+			public void Notify(Guid vessel_id, bool innerBelt, bool outerBelt, bool magnetosphere)
+			{
+				foreach (Action<Guid, bool, bool, bool> receiver in receivers)
+				{
+					try {
+						receiver.Invoke(vessel_id, innerBelt, outerBelt, magnetosphere);
+					} catch(Exception e) {
+						Lib.Log("Exception in event receiver", e);
+					}
+				}
+			}
+		}
+
+
 		// --- SPACE WEATHER --------------------------------------------------------
 
 		// return true if a solar storm is incoming at the vessel position
@@ -411,30 +432,22 @@ namespace KERBALISM
 
 		// --- SCIENCE --------------------------------------------------------------
 
-		public static ExperimentStateChanged onExperimentStateChanged = new ExperimentStateChanged();
-
+		public static ExperimentStateChanged OnExperimentStateChanged = new ExperimentStateChanged();
 		public class ExperimentStateChanged
 		{
-			// This is the list of methods that should be activated when the event fires
 			internal List<Action<Guid, string, bool>> receivers = new List<Action<Guid, string, bool>>();
-
-			// This adds a connection info handler
-			public void Add(Action<Guid, string, bool> receiver)
-			{
-				if (!receivers.Contains(receiver)) receivers.Add(receiver);
-			}
-
-			// This removes a connection info handler
-			public void Remove(Action<Guid, string, bool> receiver)
-			{
-				if (receivers.Contains(receiver)) receivers.Remove(receiver);
-			}
+			public void Add(Action<Guid, string, bool> receiver) { if (!receivers.Contains(receiver)) receivers.Add(receiver); }
+			public void Remove(Action<Guid, string, bool> receiver) { if (receivers.Contains(receiver)) receivers.Remove(receiver); }
 
 			public void Notify(Guid vessel_id, string experiment_id, bool state)
 			{
 				foreach (Action<Guid, string, bool> receiver in receivers)
 				{
-					receiver.Invoke(vessel_id, experiment_id, state);
+					try {
+						receiver.Invoke(vessel_id, experiment_id, state);
+					} catch(Exception e) {
+						Lib.Log("Exception in event receiver", e);
+					}
 				}
 			}
 		}
@@ -538,7 +551,7 @@ namespace KERBALISM
 
 		// --- FAILURES --------------------------------------------------------------
 
-		public static FailureInfo Failure = new FailureInfo();
+		public static FailureInfo OnFailure = new FailureInfo();
 
 		public class FailureInfo
 		{
