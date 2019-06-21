@@ -13,8 +13,6 @@ namespace KERBALISM
 	//   (note : only test it with equatorial circular orbits, other orbits will give inconsistent output due to sunlight evaluation algorithm limitations)
 
 	// TODO : SolarPanelFixer missing features :
-	// - (critical) reliability support
-	// - (critical) automation support
 	// - SSTU module support
 
 	// This module is used to disable stock and other plugins solar panel EC output and provide specific support
@@ -88,46 +86,11 @@ namespace KERBALISM
 			Retracted,
 			Extending,
 			Extended,
+			ExtendedFixed,
 			Retracting,
 			Static,
 			Broken,
 			Failure
-		}
-
-		public bool GetSolarPanelModule()
-		{
-			// find the module based on explicitely supported modules
-			foreach (PartModule pm in part.Modules)
-			{
-				// stock module and derivatives
-				if (pm is ModuleDeployableSolarPanel)
-					SolarPanel = new StockPanel();
-
-
-				// other supported modules
-				switch (pm.moduleName)
-				{
-					case "ModuleCurvedSolarPanel": SolarPanel = new NFSCurvedPanel(); break;
-					case "SSTUSolarPanelStatic": break;
-					case "SSTUSolarPanelDeployable": break;
-					case "SSTUModularPart": break;
-				}
-
-				if (SolarPanel != null)
-				{
-					SolarPanel.OnLoad(pm);
-					break;
-				}
-			}
-
-			if (SolarPanel == null)
-			{
-				Lib.Log("WARNING : Could not find a supported solar panel module, disabling SolarPanelFixer module...");
-				enabled = isEnabled = moduleIsEnabled = false;
-				return false;
-			}
-
-			return true;
 		}
 
 		public override void OnLoad(ConfigNode node)
@@ -136,11 +99,15 @@ namespace KERBALISM
 				return;
 
 			// apply states changes we have done trough automation
-			if ((state == PanelState.Retracted || state == PanelState.Extended) && state != SolarPanel.GetState())
+			if ((state == PanelState.Retracted || state == PanelState.Extended || state == PanelState.ExtendedFixed) && state != SolarPanel.GetState())
 			{
-				SolarPanel.SetState(state);
+				SolarPanel.SetExtendedState(state);
 			}
-				
+
+			// apply reliability broken state
+			// note : this rely on the fact that the reliability module is disabling the SolarPanelFixer monobehavior from OnStart, after OnLoad has been called
+			if (!isEnabled)
+				ReliabilityEvent(true);
 		}
 
 		public override void OnStart(StartState state)
@@ -225,11 +192,11 @@ namespace KERBALISM
 			if (state != newState)
 			{
 				state = newState;
-				if (Lib.IsEditor() && (newState == PanelState.Extended || newState == PanelState.Retracted))
+				if (Lib.IsEditor() && (newState == PanelState.Extended || newState == PanelState.ExtendedFixed || newState == PanelState.Retracted))
 					Lib.RefreshPlanner();
 			}
 
-			if (!(state == PanelState.Extended || state == PanelState.Static))
+			if (!(state == PanelState.Extended || state == PanelState.ExtendedFixed || state == PanelState.Static))
 			{
 				switch (state)
 				{
@@ -394,7 +361,7 @@ namespace KERBALISM
 			if (!prefab.isInitialized) prefab.OnStart(StartState.None);
 
 			string state = Lib.Proto.GetString(m, "state");
-			if (!(state == "Static" || state == "Deployed"))
+			if (!(state == "Static" || state == "Extended" || state == "ExtendedFixed"))
 				return;
 
 			// We don't recalculate panel orientation factor for unloaded vessels :
@@ -428,6 +395,42 @@ namespace KERBALISM
 			ec.Produce(output * elapsed_s, "panel");
 		}
 
+		public bool GetSolarPanelModule()
+		{
+			// find the module based on explicitely supported modules
+			foreach (PartModule pm in part.Modules)
+			{
+				// stock module and derivatives
+				if (pm is ModuleDeployableSolarPanel)
+					SolarPanel = new StockPanel();
+
+
+				// other supported modules
+				switch (pm.moduleName)
+				{
+					case "ModuleCurvedSolarPanel": SolarPanel = new NFSCurvedPanel(); break;
+					case "SSTUSolarPanelStatic": break;
+					case "SSTUSolarPanelDeployable": break;
+					case "SSTUModularPart": break;
+				}
+
+				if (SolarPanel != null)
+				{
+					SolarPanel.OnLoad(pm);
+					break;
+				}
+			}
+
+			if (SolarPanel == null)
+			{
+				Lib.Log("WARNING : Could not find a supported solar panel module, disabling SolarPanelFixer module...");
+				enabled = isEnabled = moduleIsEnabled = false;
+				return false;
+			}
+
+			return true;
+		}
+
 		private static PanelState GetProtoState(ProtoPartModuleSnapshot protoModule)
 		{
 			return (PanelState)Enum.Parse(typeof(PanelState), Lib.Proto.GetString(protoModule, "state"));
@@ -438,11 +441,13 @@ namespace KERBALISM
 			Lib.Proto.Set(protoModule, "state", newState.ToString());
 		}
 
-		public static void ProtoToggleState(ProtoPartModuleSnapshot protoModule, PanelState currentState)
+		public static void ProtoToggleState(SolarPanelFixer prefab, ProtoPartModuleSnapshot protoModule, PanelState currentState)
 		{
 			switch (currentState)
 			{
-				case PanelState.Retracted: SetProtoState(protoModule, PanelState.Extended); return;
+				case PanelState.Retracted:
+					if (prefab.SolarPanel.IsRetractable()) { SetProtoState(protoModule, PanelState.Extended); return; }
+					SetProtoState(protoModule, PanelState.ExtendedFixed); return;
 				case PanelState.Extended: SetProtoState(protoModule, PanelState.Retracted); return;
 			}
 		}
@@ -450,6 +455,12 @@ namespace KERBALISM
 		public void ToggleState()
 		{
 			SolarPanel.ToggleState(state);
+		}
+
+		public void ReliabilityEvent(bool isBroken)
+		{
+			state = isBroken ? PanelState.Failure : SolarPanel.GetState();
+			SolarPanel.Break(isBroken);
 		}
 
 		private double GetAnalyticalCosineFactorLanded(Vector3d sunDir)
@@ -492,13 +503,11 @@ namespace KERBALISM
 			/// <param name="analytic">if true and the panel is orientable, the returned scalar must be the best possible output (must use the rotation around the pivot)</param>
 			public abstract double GetCosineFactor(Vector3d sunDir, bool analytic = false);
 
-			/// <summary>must return the state of the panel, must be able to work before GetNominalRateOnStart has been called</summary>
+			/// <summary>must return the state of the panel, must be able to work before OnStart has been called</summary>
 			public abstract PanelState GetState();
 
 			/// <summary>Can be overridden if the target module implement a time efficiency curve. Keys are in hours.</summary>
 			public virtual FloatCurve GetTimeCurve() { return new FloatCurve(new Keyframe[] { new Keyframe(0f, 1f) }); }
-
-			public virtual bool SupportAutomation() { return false; }
 
 			/// <summary>Called at Update(), can contain target module specific hacks</summary>
 			public virtual void OnUpdate() { }
@@ -509,8 +518,43 @@ namespace KERBALISM
 			/// <summary>if the panel is retractable, must be implemented for automation support</summary>
 			public virtual void Retract() { }
 
-			/// <summary>if the panel is extendable/retractable, must be implemented for automation support</summary>
-			public virtual void SetState(PanelState state) { }
+			/// <summary>this must work when called on the prefab module</summary>
+			public virtual bool IsRetractable() { return false; }
+
+			/// <summary>
+			/// If the panel is extendable/retractable, must be implemented for automation support.
+			/// Called OnLoad, must set the target module persisted extended/retracted field to reflect changes done trough automation while unloaded</summary>
+			public virtual void SetExtendedState(PanelState state) { }
+
+			/// <summary>override this with "return false" if the module doesn't support automation when loaded</summary>
+			public virtual bool SupportAutomation(PanelState state)
+			{
+				switch (state)
+				{
+					case PanelState.Retracted:
+					case PanelState.Extending:
+					case PanelState.Extended:
+					case PanelState.Retracting:
+						return true;
+					default:
+						return false;
+				}
+			}
+
+			public virtual void Break(bool isBroken) { }
+
+			/// <summary>override this with "return false" if the module doesn't support autmation when unloaded</summary>
+			public virtual bool SupportProtoAutomation(ProtoPartModuleSnapshot protoModule)
+			{
+				switch (Lib.Proto.GetString(protoModule, "state"))
+				{
+					case "Retracted":
+					case "Extended":
+						return true;
+					default:
+						return false;
+				}
+			}
 
 			public void ToggleState(PanelState state)
 			{
@@ -525,6 +569,12 @@ namespace KERBALISM
 		private abstract class SupportedPanel<T> : SupportedPanel where T : PartModule
 		{
 			public T panelModule;
+
+			public override void Break(bool isBroken)
+			{
+				panelModule.isEnabled = !isBroken;
+				panelModule.enabled = !isBroken;
+			}
 		}
 
 		// stock solar panel module support
@@ -535,8 +585,8 @@ namespace KERBALISM
 		// - we prevent stock EC generation by reseting the reshandler rate
 		private class StockPanel : SupportedPanel<ModuleDeployableSolarPanel>
 		{
-			private Transform sunCatcher;   // suncatcher transform
-			private Transform pivot;        // pivot transform (if it's a tracking panel)
+			private Transform sunCatcherPosition;   // middle point of the panel surface (usually). Use only position, panel surface direction depend on the pivot transform, even for static panels.
+			private Transform sunCatcherPivot;      // If it's a tracking panel, "up" is the pivot axis and "position" is the pivot position. In any case "forward" is the panel surface normal.
 
 			public override void OnLoad(PartModule targetModule)
 			{
@@ -550,6 +600,11 @@ namespace KERBALISM
 				{
 					field.guiActive = false;
 				}
+
+				if (sunCatcherPivot == null)
+					sunCatcherPivot = panelModule.part.FindModelComponent<Transform>(panelModule.pivotName);
+				if (sunCatcherPosition == null)
+					sunCatcherPosition = panelModule.part.FindModelTransform(panelModule.secondaryTransformName);
 
 				// avoid rate lost due to OnStart being called multiple times in the editor
 				if (initialized)
@@ -589,10 +644,10 @@ namespace KERBALISM
 				RaycastHit raycastHit;
 				if (analytic)
 				{
-					if (sunCatcher == null)
-						sunCatcher = panelModule.part.FindModelTransform(panelModule.secondaryTransformName);
+					if (sunCatcherPosition == null)
+						sunCatcherPosition = panelModule.part.FindModelTransform(panelModule.secondaryTransformName);
 
-					Physics.Raycast(sunCatcher.position, sunDir, out raycastHit, 10000f);
+					Physics.Raycast(sunCatcherPosition.position, sunDir, out raycastHit, 10000f);
 				}
 				else
 				{
@@ -621,22 +676,15 @@ namespace KERBALISM
 #if !DEBUG
 				if (!analytic)
 					return Math.Max(Vector3d.Dot(sunDir, panelModule.trackingDotTransform.forward), 0.0);
-#endif
-				if (panelModule.isTracking && pivot == null)
-					pivot = panelModule.part.FindModelComponent<Transform>(panelModule.pivotName);
-
-				if (sunCatcher == null)
-					sunCatcher = panelModule.part.FindModelTransform(panelModule.secondaryTransformName);
-
-#if DEBUG
-				DebugDrawer.DebugLine(sunCatcher.position, sunCatcher.position + sunCatcher.forward, Color.yellow);
-				if (panelModule.isTracking) DebugDrawer.DebugLine(pivot.position, pivot.position + (pivot.up * -1f), Color.blue);
+#else
+				DebugDrawer.DebugLine(sunCatcherPosition.position, sunCatcherPosition.position + sunCatcherPivot.forward, Color.yellow);
+				if (panelModule.isTracking) DebugDrawer.DebugLine(sunCatcherPivot.position, sunCatcherPivot.position + (sunCatcherPivot.up * -1f), Color.blue);
 #endif
 
 				if (panelModule.isTracking)
-					return Math.Cos(1.57079632679 - Math.Acos(Vector3d.Dot(sunDir, pivot.up)));
+					return Math.Cos(1.57079632679 - Math.Acos(Vector3d.Dot(sunDir, sunCatcherPivot.up)));
 				else
-					return Math.Max(Vector3d.Dot(sunDir, sunCatcher.forward), 0.0);
+					return Math.Max(Vector3d.Dot(sunDir, sunCatcherPivot.forward), 0.0);
 			}
 
 			public override PanelState GetState()
@@ -652,7 +700,7 @@ namespace KERBALISM
 				switch (panelModule.deployState)
 				{
 					case ModuleDeployablePart.DeployState.EXTENDED:
-						if (!panelModule.retractable) return PanelState.Static;
+						if (!IsRetractable()) return PanelState.ExtendedFixed;
 						return PanelState.Extended;
 					case ModuleDeployablePart.DeployState.RETRACTED: return PanelState.Retracted;
 					case ModuleDeployablePart.DeployState.RETRACTING: return PanelState.Retracting;
@@ -662,9 +710,7 @@ namespace KERBALISM
 				return PanelState.Unknown;
 			}
 
-			public override bool SupportAutomation() { return panelModule.useAnimation ? true : false; }
-
-			public override void SetState(PanelState state)
+			public override void SetExtendedState(PanelState state)
 			{
 				switch (state)
 				{
@@ -672,6 +718,7 @@ namespace KERBALISM
 						panelModule.deployState = ModuleDeployablePart.DeployState.RETRACTED;
 						break;
 					case PanelState.Extended:
+					case PanelState.ExtendedFixed:
 						panelModule.deployState = ModuleDeployablePart.DeployState.EXTENDED;
 						break;
 				}
@@ -680,6 +727,14 @@ namespace KERBALISM
 			public override void Extend() { panelModule.Extend(); }
 
 			public override void Retract() { panelModule.Retract(); }
+
+			public override bool IsRetractable() { return panelModule.retractable; }
+
+			public override void Break(bool isBroken)
+			{
+				base.Break(isBroken);
+				panelModule.part.FindModelComponents<Animation>().ForEach(k => k.Stop());
+			}
 		}
 
 		// Near future solar curved panel support
@@ -783,7 +838,10 @@ namespace KERBALISM
 				string stateStr = Lib.ReflectionValue<string>(panelModule, "SavedState");
 				Type enumtype = typeof(ModuleDeployablePart.DeployState);
 				if (!Enum.IsDefined(enumtype, stateStr))
+				{
+					if (!deployable) return PanelState.Static;
 					return PanelState.Unknown;
+				}
 
 				ModuleDeployablePart.DeployState state = (ModuleDeployablePart.DeployState)Enum.Parse(enumtype, stateStr);
 
@@ -800,9 +858,7 @@ namespace KERBALISM
 				return PanelState.Unknown;
 			}
 
-			public override bool SupportAutomation() { return deployable; }
-
-			public override void SetState(PanelState state)
+			public override void SetExtendedState(PanelState state)
 			{
 				switch (state)
 				{
@@ -818,6 +874,14 @@ namespace KERBALISM
 			public override void Extend() { Lib.ReflectionCall(panelModule, "DeployPanels"); }
 
 			public override void Retract() { Lib.ReflectionCall(panelModule, "RetractPanels"); }
+
+			public override bool IsRetractable() { return true; }
+
+			public override void Break(bool isBroken)
+			{
+				base.Break(isBroken);
+				panelModule.part.FindModelComponents<Animation>().ForEach(k => k.Stop());
+			}
 		}
 
 		private class SSTUStaticPanel : SupportedPanel<PartModule>
