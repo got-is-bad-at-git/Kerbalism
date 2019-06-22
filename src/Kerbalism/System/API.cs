@@ -432,8 +432,7 @@ namespace KERBALISM
 
 		// --- SCIENCE --------------------------------------------------------------
 
-		public static ExperimentStateChanged OnExperimentStateChanged = new ExperimentStateChanged();
-		public class ExperimentStateChanged
+		public class StringBoolStateChanged
 		{
 			internal List<Action<Vessel, string, bool>> receivers = new List<Action<Vessel, string, bool>>();
 			public void Add(Action<Vessel, string, bool> receiver) { if (!receivers.Contains(receiver)) receivers.Add(receiver); }
@@ -451,6 +450,10 @@ namespace KERBALISM
 				}
 			}
 		}
+
+		public static StringBoolStateChanged OnTransmitStateChanged = new StringBoolStateChanged();
+		public static StringBoolStateChanged OnExperimentStateChanged = new StringBoolStateChanged();
+
 
 		// return size of a file in a vessel drive
 		public static double FileSize(Vessel v, string subject_id)

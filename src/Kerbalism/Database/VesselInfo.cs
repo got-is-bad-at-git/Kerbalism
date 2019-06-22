@@ -9,6 +9,11 @@ namespace KERBALISM
 	/// </summary>
 	public sealed class Vessel_info
 	{
+		/// <summary>
+		/// The minimum transmit data rate for "can transmit": 1 bit per second
+		/// </summary>
+		internal static readonly double MINIMUM_TRANSMIT_DATA_RATE = 1.0 / 1024.0 / 1024.0 / 8;
+
 		public Vessel_info(Vessel v)
 		{
 			// NOTE: you can't use cached vessel position outside of the cache
@@ -96,8 +101,17 @@ namespace KERBALISM
 			critical = Reliability.HasCriticalFailure(v);
 
 			// communications info
+			bool old_canTransmit = connection != null && connection.rate > MINIMUM_TRANSMIT_DATA_RATE; // cutoff at 1 bit per second
+			string old_transmitting = transmitting;
+
 			connection = ConnectionInfo.Update(v, powered, blackout);
 			transmitting = Science.Transmitting(v, connection.linked && connection.rate > double.Epsilon);
+
+			bool new_canTransmit = connection.rate > MINIMUM_TRANSMIT_DATA_RATE;
+			if (new_instance || old_canTransmit != new_canTransmit || old_transmitting != transmitting)
+			{
+				API.OnTransmitStateChanged.Notify(v, transmitting, new_canTransmit);
+			}
 
 			// habitat data
 			volume = Habitat.Tot_volume(v);
