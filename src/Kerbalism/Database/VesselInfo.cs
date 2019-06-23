@@ -90,8 +90,6 @@ namespace KERBALISM
 				API.OnRadiationFieldChanged.Notify(v, inner_belt, outer_belt, magnetosphere);
 			}
 
-			Science.Generate_subject_id(null, null);
-
 			// extended atmosphere
 			thermosphere = Sim.InsideThermosphere(v);
 			exosphere = Sim.InsideExosphere(v);
