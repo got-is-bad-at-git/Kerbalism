@@ -183,7 +183,7 @@ namespace KERBALISM
 
 				// update ui
 				var title = Lib.Ellipsis(exp.name, Styles.ScaleStringLength(24));
-				if (scienceValue > 0.1) title += " •<b>" + scienceValue.ToString("F1") + "</b>";
+				if (scienceValue > 0.1) title += " <sprite=\"CurrencySpriteAsset\" name=\"Science\" tint=1> " + scienceValue.ToString("F1");
 
 				string statusString = string.Empty;
 				switch (state) {

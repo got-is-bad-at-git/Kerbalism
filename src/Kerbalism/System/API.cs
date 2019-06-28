@@ -542,7 +542,7 @@ namespace KERBALISM
 			}
 
 			//This fires the event off, activating all the listening methods.
-			public void Fire(float credits, ScienceSubject subject, ProtoVessel pv, bool transmitted)
+			public void Notify(float credits, ScienceSubject subject, ProtoVessel pv, bool transmitted)
 			{
 				//Loop through the list of listening methods and Invoke them.
 				foreach (Action<float, ScienceSubject, ProtoVessel, bool> method in listeningMethods)
