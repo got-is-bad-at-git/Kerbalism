@@ -20,7 +20,7 @@ namespace KERBALISM
 
 		public KerbalData(ConfigNode node)
 		{
-			rescue = Lib.ConfigValue(node, "rescue", Lib.ConfigValue(node, "resque", true)); //< support pre 1.1.9 typo
+			rescue = Lib.ConfigValue(node, "rescue", Lib.ConfigValue(node, "resque", false)); //< support pre 1.1.9 typo
 			disabled = Lib.ConfigValue(node, "disabled", false);
 			eva_dead = Lib.ConfigValue(node, "eva_dead", false);
 			sickbay = Lib.ConfigValue(node, "sickbay", String.Empty);

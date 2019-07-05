@@ -173,7 +173,7 @@ namespace KERBALISM
 				}
 
 				// do nothing else for invalid vessels
-				if (!vi.is_valid)
+				if (!vi.is_valid || vi.is_rescue)
 					continue;
 
 				// get vessel data from db

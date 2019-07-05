@@ -5,7 +5,12 @@ using UnityEngine;
 namespace KERBALISM
 {
 	/// <summary>
-	/// This data actually is NOT persisted
+	/// This data actually is NOT persisted.
+	/// <para>
+	/// NOTE: you can't use cached vessel position outside of the cache
+	/// at different points in time, vessel/body positions are relative to a different frame of reference
+	/// so comparing the current position of a vessel with the cached one of another makes no sense
+	/// </para>
 	/// </summary>
 	public sealed class Vessel_info
 	{
@@ -16,23 +21,17 @@ namespace KERBALISM
 
 		public Vessel_info(Vessel v)
 		{
-			// NOTE: you can't use cached vessel position outside of the cache
-			// at different points in time, vessel/body positions are relative to a different frame of reference
-			// so comparing the current position of a vessel with the cached one of another makes no sense
 
 			// determine if this is a valid vessel
 			is_vessel = Lib.IsVessel(v);
-			if (!is_vessel)
+			if (!is_vessel) {
 				return;
-
-			// determine if this is a rescue mission vessel
-			is_rescue = Misc.IsRescueMission(v);
-			if (is_rescue)
-				return;
+			}
 
 			// dead EVA are not valid vessels
-			if (EVA.IsDead(v))
+			if (EVA.IsDead(v)) {
 				return;
+			}
 
 			// shortcut for common tests
 			is_valid = true;
@@ -46,6 +45,14 @@ namespace KERBALISM
 		public void Update(Vessel v)
 		{
 			if (!obsolete) return;
+
+			// determine if this is a rescue mission vessel
+			// do this periodically because KSP seems to be lazy when initializing this.
+			// the very first vessel in a new save will always be recognized as a rescue mission
+			is_rescue = Misc.IsRescueMission(v);
+			if (is_rescue) {
+				return;
+			}
 
 			// calculate crew info for the vessel
 			crew_count = Lib.CrewCount(v);
