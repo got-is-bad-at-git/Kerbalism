@@ -115,7 +115,7 @@ namespace KERBALISM
 
 					// this is the science value of this sample
 					double dataValue = Value(exp_filename, file.buff);
-					bool doCredit = file.size <= double.Epsilon || dataValue > buffer_science_value;;
+					bool doCredit = file.size <= double.Epsilon || dataValue > buffer_science_value;
 
 					// if buffer science value is high enough or file was transmitted completely
 					if (doCredit)
@@ -253,6 +253,9 @@ namespace KERBALISM
 				//   in any case, we are buffering the transmitting data and calling this
 				//   function only once in a while
 				GameEvents.OnScienceRecieved.Fire(credits, subject, pv, false);
+
+				// maybe this should instead be done whenever an experiment starts recording in a new situation
+				GameEvents.OnExperimentDeployed.Fire(new ScienceData(subject.science, 1.0f, 1.0f, subject_id, subject_id));
 
 				API.OnScienceReceived.Notify(credits, subject, pv, transmitted);
 			}
