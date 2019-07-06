@@ -295,16 +295,16 @@ namespace KERBALISM
 		public int stormDurationHours = 6;
 
 		[GameParameters.CustomFloatParameterUI("Storm Ejection Speed", asPercentage = true, minValue = 0.01f, maxValue = 1, displayFormat = "F2", toolTip = "CME speed as percentage of C")]
-		public float stormEjectionSpeedC = 0.33f;
+		public float _stormEjectionSpeedC = 0.33f;
 
 		[GameParameters.CustomFloatParameterUI("Shielding Efficiency", asPercentage = true, minValue = 0.01f, maxValue = 1, displayFormat = "F2", toolTip = "Proportion of radiation blocked by shielding (at max amount)")]
 		public float shieldingEfficiency = 0.9f;
 
 		[GameParameters.CustomFloatParameterUI("Storm Radiation rad/h", minValue = 1, maxValue = 15, displayFormat = "F2", toolTip = "Radiation during a solar storm")]
-		public float stormRadiation = 5;
+		public float _stormRadiation = 5;
 
 		[GameParameters.CustomFloatParameterUI("External Radiation rad/h", minValue = 0.01f, maxValue = 2, displayFormat = "F2", toolTip = "Radiation outside the heliopause")]
-		public float externRadiation = 0.04f;
+		public float _externRadiation = 0.04f;
 
 		public double StormMinTime { get { return stormMinDays * Lib.HoursInDay() * 3600.0; } }
 
@@ -312,11 +312,11 @@ namespace KERBALISM
 
 		public double StormDuration { get { return stormDurationHours * 3600.0; } }
 
-		public double ExternRadiation { get { return externRadiation / 3600.0; } }
+		public double ExternRadiation { get { return _externRadiation / 3600.0; } }
 
-		public double StormRadiation { get { return stormRadiation / 3600.0; } }
+		public double StormRadiation { get { return _stormRadiation / 3600.0; } }
 
-		public double StormEjectionSpeed { get { return stormEjectionSpeedC * 299792458.0; } }
+		public double StormEjectionSpeed { get { return _stormEjectionSpeedC * 299792458.0; } }
 
 		public override GameParameters.GameMode GameMode { get { return GameParameters.GameMode.ANY; } }
 

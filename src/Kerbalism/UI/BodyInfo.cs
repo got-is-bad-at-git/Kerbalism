@@ -89,24 +89,24 @@ namespace KERBALISM
 		{
 			// TODO cache this information in RadiationBody
 
-			double rad = PreferencesStorm.Instance.externRadiation;
+			double rad = PreferencesStorm.Instance.ExternRadiation;
 			var rbSun = Radiation.Info(FlightGlobals.Bodies[0]);
 			rad += rbSun.radiation_pause;
 
 			var rb = Radiation.Info(body);
 
 			if (rb.inner_visible)
-				inner = rb.model.has_inner ? "~" + Lib.HumanReadableRadiation(Math.Max(0, rad + rb.radiation_inner) / 3600.0) : "n/a";
+				inner = rb.model.has_inner ? "~" + Lib.HumanReadableRadiation(Math.Max(0, rad + rb.radiation_inner)) : "n/a";
 			else
 				inner = "unknown";
-
+			
 			if (rb.outer_visible)
-				outer = rb.model.has_outer ? "~" + Lib.HumanReadableRadiation(Math.Max(0, rad + rb.radiation_outer) / 3600.0) : "n/a";
+				outer = rb.model.has_outer ? "~" + Lib.HumanReadableRadiation(Math.Max(0, rad + rb.radiation_outer)) : "n/a";
 			else
 				outer = "unknown";
 
 			if (rb.pause_visible)
-				pause = rb.model.has_pause ? "~" + Lib.HumanReadableRadiation(Math.Max(0, rad + rb.radiation_pause) / 3600.0) : "n/a";
+				pause = rb.model.has_pause ? "~" + Lib.HumanReadableRadiation(Math.Max(0, rad + rb.radiation_pause)) : "n/a";
 			else
 				pause = "unknown";
 		}
