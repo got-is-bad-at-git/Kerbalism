@@ -254,9 +254,6 @@ namespace KERBALISM
 				//   function only once in a while
 				GameEvents.OnScienceRecieved.Fire(credits, subject, pv, false);
 
-				// maybe this should instead be done whenever an experiment starts recording in a new situation
-				GameEvents.OnExperimentDeployed.Fire(new ScienceData(subject.science, 1.0f, 1.0f, subject_id, subject_id));
-
 				API.OnScienceReceived.Notify(credits, subject, pv, transmitted);
 			}
 

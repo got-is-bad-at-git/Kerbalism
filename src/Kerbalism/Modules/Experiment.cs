@@ -249,6 +249,7 @@ namespace KERBALISM
 			{
 				dataSampled = 0;
 				forcedRun = false;
+				GameEvents.OnExperimentDeployed.Fire(new ScienceData(0, 0, 0, subject_id, subject_id));
 			}
 			last_subject_id = subject_id;
 
