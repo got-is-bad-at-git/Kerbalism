@@ -20,10 +20,7 @@ namespace KERBALISM
 			// consume ec for transmitters
 			ec.Consume(vi.connection.ec * elapsed_s, "comms");
 
-			if (TimeWarp.CurrentRate > 2.0f || elapsed_s > 10)
-				Cache.WarpCache(v).dataCapacity = vi.connection.rate * elapsed_s;
-			else
-				Cache.WarpCache(v).dataCapacity = 0;
+			Cache.WarpCache(v).dataCapacity = vi.connection.rate * elapsed_s;
 
 			// do nothing if network is not ready
 			if (!NetworkInitialized) return;
