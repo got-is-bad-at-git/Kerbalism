@@ -17,6 +17,7 @@
 * Apply artificial radiation sources after Gamma Transparency is applied (Free Thinker)
 * Fixed the configuration for EVA kerbals, a problem introduced by Serenity (Sir Mortimer)
 * Added support for Universal Storage 2 fuel cells (lordcirth)
+* Radiation values in settings now take a preset from Settings.cfg (Sir Mortimer)
 
 ## v3.0.2 for all versions of KSP from 1.4.0 to 1.7.x
 
