@@ -173,7 +173,8 @@ namespace KERBALISM
 			sunlight = 1.0 - Sim.ShadowPeriod(v) / Sim.OrbitalPeriod(v);
 
 			// get solar flux, this can vary a bit but not enough for it to matter much
-			solar_flux = Sim.SolarFlux(Sim.SunDistance(vesselPos));
+			var sun = Lib.GetSun(v.mainBody);
+			solar_flux = Sim.SolarFlux(Sim.SunDistance(vesselPos, sun), sun);
 
 			// for atmospheric bodies whose rotation period is less than 120 hours,
 			// determine analytic atmospheric absorption over a single body revolution instead
