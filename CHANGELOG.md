@@ -20,6 +20,8 @@
 * Added config for Unkerballed start tech tree (Sir Mortimer)
 * Added config for a new ReStock+ probe core RC-XL001 (Sir Mortimer)
 * Radiation values in settings now take a preset from Settings.cfg (Sir Mortimer)
+* Added radiation source to kerbal atomics engines (Shiolle)
+* When transmitting data, prioritize the file with the highest relative value (Sir Mortimer)
 * Major rewrite of the solar panel code (Got)
 * Kopernicus Support (Sir Mortimer)
 
