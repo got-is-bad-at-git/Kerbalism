@@ -109,14 +109,11 @@ namespace KERBALISM
 				// remember savegame id
 				savegame_uid = DB.uid;
 			}
-
-			Science.ClearDeferred();
 		}
 
 		public override void OnSave(ConfigNode node)
 		{
 			// serialize data
-			Science.CreditAllDeferred();
 			DB.Save(node);
 		}
 
